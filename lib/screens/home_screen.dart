@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:role_play/enums/record_status.dart';
 import 'package:role_play/theme/role_play_theme.dart';
 import 'package:role_play/widgets/sidebar_widget.dart';
 import 'package:role_play/widgets/toast_widget.dart';
@@ -16,7 +19,18 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Variables
-  bool expandSidebar = true;
+  bool _expandSidebar = true;
+  RecordStatus _recordStatus = RecordStatus.inactive;
+  RecordingStatus _recordingStatus = RecordingStatus.playing;
+  int _videoTimeSeconds = 0;
+  Timer? _videoTimer;
+
+  @override
+  void dispose() {
+    _videoTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -51,10 +65,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         children: [
           Sidebar(
-            expand: expandSidebar,
+            expand: _expandSidebar,
             onSizePressed: () {
               setState(() {
-                expandSidebar = !expandSidebar;
+                _expandSidebar = !_expandSidebar;
               });
             },
           ),
@@ -126,7 +140,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                     onPressed: () {},
                                     icon: SvgPicture.asset(
-                                        "assets/icons/video.svg"),
+                                      "assets/icons/video.svg",
+                                    ),
                                   ),
                                   IconButton.filled(
                                     style: IconButton.styleFrom(
@@ -160,7 +175,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 onPressed: () {},
                                 icon: SvgPicture.asset(
-                                    "assets/icons/graphic_eq.svg"),
+                                  "assets/icons/graphic_eq.svg",
+                                ),
                               ),
                             ),
                             Positioned(
@@ -170,19 +186,176 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  FilledButton.icon(
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                      minimumSize: const Size(200, 51),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
+                                  Visibility(
+                                    visible: _recordStatus.isInactive,
+                                    child: FilledButton.icon(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        minimumSize: const Size(200, 51),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _recordStatus =
+                                              RecordStatus.recording;
+                                          _recordingStatus =
+                                              RecordingStatus.playing;
+                                          _videoTimer = Timer.periodic(
+                                            const Duration(seconds: 1),
+                                            (timer) {
+                                              setState(() {
+                                                _videoTimeSeconds++;
+                                              });
+                                            },
+                                          );
+                                        });
+                                      },
+                                      icon: const Icon(
+                                        Icons.video_call_rounded,
+                                      ),
+                                      label: const Text(
+                                        "Start Recording",
                                       ),
                                     ),
-                                    onPressed: () {},
-                                    icon: const Icon(Icons.video_call_rounded),
-                                    label: const Text(
-                                      "Start Recording",
+                                  ),
+                                  Visibility(
+                                    visible: _recordStatus.isRecording,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        color: Colors.black54,
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: Wrap(
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 100,
+                                            child: Text(
+                                              "${Duration(
+                                                seconds: _videoTimeSeconds,
+                                              )}"
+                                                  .split('.')[0]
+                                                  .padLeft(8, '0'),
+                                              style: GoogleFonts.montserrat(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            onPressed: () {
+                                              if (_recordingStatus.isPlaying) {
+                                                _videoTimer?.cancel();
+                                                setState(() {
+                                                  _recordingStatus =
+                                                      RecordingStatus.paused;
+                                                });
+                                              } else {
+                                                setState(() {
+                                                  _recordingStatus =
+                                                      RecordingStatus.playing;
+                                                  _videoTimer = Timer.periodic(
+                                                    const Duration(seconds: 1),
+                                                    (timer) {
+                                                      setState(() {
+                                                        _videoTimeSeconds++;
+                                                      });
+                                                    },
+                                                  );
+                                                });
+                                              }
+                                            },
+                                            icon: Icon(
+                                              _recordingStatus.isPlaying
+                                                  ? Icons.pause
+                                                  : Icons.play_arrow,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            onPressed: () {
+                                              _videoTimer?.cancel();
+                                              setState(() {
+                                                _recordingStatus =
+                                                    RecordingStatus.paused;
+                                                _recordStatus =
+                                                    RecordStatus.preview;
+                                                _videoTimer = null;
+                                              });
+                                            },
+                                            icon: const Icon(
+                                              Icons.stop,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Visibility(
+                                    visible: _recordStatus.isPreview,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        color: Colors.black54,
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      child: Wrap(
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          Text(
+                                            "${Duration(
+                                              seconds: _videoTimeSeconds,
+                                            )}"
+                                                .split('.')[0]
+                                                .padLeft(8, '0'),
+                                            style: GoogleFonts.montserrat(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            onPressed: () {
+                                              _videoTimer?.cancel();
+                                              setState(() {
+                                                _recordStatus =
+                                                    RecordStatus.inactive;
+                                                _recordingStatus =
+                                                    RecordingStatus.playing;
+                                                _videoTimeSeconds = 0;
+                                                _videoTimer = null;
+                                              });
+                                            },
+                                            icon: const Icon(
+                                              Icons.replay_outlined,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          FilledButton.icon(
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                              foregroundColor: Colors.white,
+                                              minimumSize: const Size(16, 49),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            onPressed: () {},
+                                            icon: const Icon(
+                                              Icons.chevron_right,
+                                            ),
+                                            label: const Text(
+                                              "View Analysis",
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
