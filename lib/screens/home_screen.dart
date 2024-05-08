@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +11,7 @@ import 'package:role_play/enums/record_status.dart';
 import 'package:role_play/theme/role_play_theme.dart';
 import 'package:role_play/widgets/sidebar_widget.dart';
 import 'package:role_play/widgets/toast_widget.dart';
+import 'package:role_play/services/WebSocket.dart';
 
 /// Home Screen
 class HomeScreen extends ConsumerStatefulWidget {
@@ -24,6 +28,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   RecordingStatus _recordingStatus = RecordingStatus.playing;
   int _videoTimeSeconds = 0;
   Timer? _videoTimer;
+
+  final WebSocket _socket = WebSocket("ws://127.0.0.1:5000/");
+  bool _isConnected = false;
+
+  void stop_recording(){
+    _videoTimer?.cancel();
+    _socket.send_message("stop_recording");
+    setState(() {
+      _recordingStatus =
+          RecordingStatus.paused;
+      _recordStatus =
+          RecordStatus.preview;
+      _videoTimer = null;
+    });
+  }
+  void start_recording() {
+    setState(() {
+      _socket.send_message("start_recording");
+      _recordStatus =
+          RecordStatus.recording;
+      _recordingStatus =
+          RecordingStatus.playing;
+      _videoTimer = Timer.periodic(
+        const Duration(seconds: 1),
+            (timer) {
+          setState(() {
+            _videoTimeSeconds++;
+          });
+        },
+      );
+    });
+  }
+
+  void connect(BuildContext context) async {
+    _socket.connect();
+    setState(() {
+      _isConnected = true;
+    });
+  }
+
+  void disconnect() {
+    _socket.disconnect();
+    setState(() {
+      _isConnected = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -119,9 +174,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
-                                child: Image.network(
-                                  "https://via.placeholder.com/854x480",
-                                ),
+                                child: _isConnected
+                                    ? Center(
+                                      child: Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          Container(
+                                            color: Colors.white
+                                          ),
+                                          FittedBox(
+                                            fit: BoxFit.fitHeight,
+                                            child: StreamBuilder(
+                                                stream: _socket.stream,
+                                                builder: (context, snapshot) {
+                                                  if (!snapshot.hasData) {
+                                                    return const Center(child: CircularProgressIndicator());
+                                                  }
+
+                                                  if (snapshot.connectionState ==
+                                                      ConnectionState.done) {
+                                                    return const Center(
+                                                      child:
+                                                          Text("Connection Closed !"),
+                                                    );
+                                                  }
+                                                  //? Working for single frames
+                                                  var image = json.decode(
+                                                      utf8.decode(snapshot.data));
+
+                                                  // return Text("Hola");
+                                                  return Image.memory(
+                                                    Uint8List.fromList(
+                                                      base64Decode(
+                                                        (image["image"]),
+                                                      ),
+                                                    ),
+                                                    gaplessPlayback: true,
+                                                    excludeFromSemantics: true,
+                                                  );
+                                                },
+                                              ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                    : Center(child: ElevatedButton(child: Text("Connect", style: TextStyle(color: Colors.black)), onPressed: (){connect(context);},)),
                               ),
                             ),
                             Positioned(
@@ -199,20 +296,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         ),
                                       ),
                                       onPressed: () {
-                                        setState(() {
-                                          _recordStatus =
-                                              RecordStatus.recording;
-                                          _recordingStatus =
-                                              RecordingStatus.playing;
-                                          _videoTimer = Timer.periodic(
-                                            const Duration(seconds: 1),
-                                            (timer) {
-                                              setState(() {
-                                                _videoTimeSeconds++;
-                                              });
-                                            },
-                                          );
-                                        });
+                                        start_recording();
                                       },
                                       icon: const Icon(
                                         Icons.video_call_rounded,
@@ -279,14 +363,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           ),
                                           IconButton(
                                             onPressed: () {
-                                              _videoTimer?.cancel();
-                                              setState(() {
-                                                _recordingStatus =
-                                                    RecordingStatus.paused;
-                                                _recordStatus =
-                                                    RecordStatus.preview;
-                                                _videoTimer = null;
-                                              });
+                                              stop_recording();
                                             },
                                             icon: const Icon(
                                               Icons.stop,

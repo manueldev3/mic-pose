@@ -1,8 +1,4 @@
 import 'package:role_play/screens/VideoStreaming.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:role_play/screens/call_test_screen.dart';
-import 'package:role_play/services/SignalingService.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:role_play/screens/home_screen.dart';
@@ -54,17 +50,6 @@ class MainApp extends StatelessWidget {
     */
 
 
-    return Scaffold(
-      body: Center(
-        child: ElevatedButton(
-          child: const Text("Finally Working"),
-          onPressed: (){
-            Navigator.push(context, 
-                MaterialPageRoute(builder: (context)=>VideoStream())
-            );
-          },
-        )
-      ),
-    );
+    return HomeScreen();
   }
 }

@@ -51,10 +51,6 @@ class _VideoStreamState extends State<VideoStream> {
                     onPressed: disconnect,
                     child: const Text("Disconnect"),
                   ),
-                  ElevatedButton(
-                    onPressed: _socket.send_message,
-                    child: const Text("send"),
-                  ),
                 ],
               ),
               const SizedBox(

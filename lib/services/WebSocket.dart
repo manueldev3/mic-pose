@@ -37,8 +37,8 @@ class WebSocket {
     _channel = IOWebSocketChannel.connect(Uri.parse(url));
   }
 
-  void send_message() async{
-    _channel!.sink.add("data_data_data");
+  void send_message(String message) async{
+    _channel!.sink.add(message);
   }
 
   /// Disconnects the current application from a websocket
