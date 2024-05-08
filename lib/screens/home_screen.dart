@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,13 +22,29 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with SingleTickerProviderStateMixin {
   /// Variables
   bool _expandSidebar = true;
   RecordStatus _recordStatus = RecordStatus.inactive;
   RecordingStatus _recordingStatus = RecordingStatus.playing;
   int _videoTimeSeconds = 0;
   Timer? _videoTimer;
+  int analyticsCurrentIndex = 0;
+
+  /// late variables
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        analyticsCurrentIndex = _tabController.index;
+      });
+    });
+  }
 
   final WebSocket _socket = WebSocket("ws://127.0.0.1:5000/");
   bool _isConnected = false;
@@ -82,6 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _videoTimer?.cancel();
     super.dispose();
   }
@@ -423,7 +441,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                     BorderRadius.circular(8),
                                               ),
                                             ),
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              setState(() {
+                                                _recordStatus =
+                                                    RecordStatus.view;
+                                              });
+                                            },
                                             icon: const Icon(
                                               Icons.chevron_right,
                                             ),
@@ -658,207 +681,486 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ],
                     ),
-                    Column(
-                      children: [
-                        Container(
-                          width: 364,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
-                          ),
-                          padding: const EdgeInsets.all(16),
-                          child: Wrap(
-                            direction: Axis.vertical,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 8,
-                            children: [
-                              Text(
-                                "Interview Status",
-                                style: GoogleFonts.poppins(
-                                  color: RolePlayColors.backgroundDark,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              SizedBox(
-                                width: 332,
-                                child: Text(
-                                  "Lorem ipsum dolor sit amet consectetur. "
-                                  "Varius diam dolor at feugiat. ",
+
+                    /// Column 2
+                    Visibility(
+                      visible: !_recordStatus.isView,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 364,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.white,
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: Wrap(
+                              direction: Axis.vertical,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              children: [
+                                Text(
+                                  "Interview Status",
                                   style: GoogleFonts.poppins(
-                                    color: Colors.grey,
+                                    color: RolePlayColors.backgroundDark,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
-                              ),
-                              Wrap(
-                                direction: Axis.vertical,
-                                children: [
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.warning("Watch your posture."),
-                                  ),
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.success(
-                                      "Hands not in the pockets",
+                                SizedBox(
+                                  width: 332,
+                                  child: Text(
+                                    "Lorem ipsum dolor sit amet consectetur. "
+                                    "Varius diam dolor at feugiat. ",
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.grey,
                                     ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.success(
-                                      "Hands not in the face",
+                                ),
+                                Wrap(
+                                  direction: Axis.vertical,
+                                  children: [
+                                    SizedBox(
+                                      width: 332,
+                                      child:
+                                          Toast.warning("Watch your posture."),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.danger(
-                                      "Try to level your shoulders",
+                                    SizedBox(
+                                      width: 332,
+                                      child: Toast.success(
+                                        "Hands not in the pockets",
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.success(
-                                      "Hips are aligned",
+                                    SizedBox(
+                                      width: 332,
+                                      child: Toast.success(
+                                        "Hands not in the face",
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.success(
-                                      "Your head is straight",
+                                    SizedBox(
+                                      width: 332,
+                                      child: Toast.danger(
+                                        "Try to level your shoulders",
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 332,
-                                    child: Toast.warning(
-                                      "Try to straighten your spine",
+                                    SizedBox(
+                                      width: 332,
+                                      child: Toast.success(
+                                        "Hips are aligned",
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    SizedBox(
+                                      width: 332,
+                                      child: Toast.success(
+                                        "Your head is straight",
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 332,
+                                      child: Toast.warning(
+                                        "Try to straighten your spine",
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(
+                            height: 16,
+                          ),
+                          Container(
+                            constraints: const BoxConstraints(
+                              maxWidth: 364,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: RolePlayColors.cardBg.withOpacity(0.75),
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: Wrap(
+                              direction: Axis.vertical,
+                              spacing: 8,
+                              children: [
+                                Text(
+                                  "Interview practice questions",
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      margin: const EdgeInsets.only(top: 8),
+                                    ),
+                                    SizedBox(
+                                      width: 320,
+                                      child: Text(
+                                        "How do you handle feedback that you disagree with?",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      margin: const EdgeInsets.only(top: 8),
+                                    ),
+                                    SizedBox(
+                                      width: 320,
+                                      child: Text(
+                                        "How do you prioritize your tasks when working on multiple projects simultaneously?",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      margin: const EdgeInsets.only(top: 8),
+                                    ),
+                                    SizedBox(
+                                      width: 320,
+                                      child: Text(
+                                        "How do you handle feedback that you disagree with?",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      margin: const EdgeInsets.only(top: 8),
+                                    ),
+                                    SizedBox(
+                                      width: 320,
+                                      child: Text(
+                                        "How do you prioritize your tasks when working on multiple projects simultaneously?",
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Visibility(
+                      visible: _recordStatus.isView,
+                      child: Container(
+                        width: 364,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.white,
                         ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        Container(
-                          constraints: const BoxConstraints(
-                            maxWidth: 364,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: RolePlayColors.cardBg.withOpacity(0.75),
-                          ),
-                          padding: const EdgeInsets.all(16),
-                          child: Wrap(
-                            direction: Axis.vertical,
-                            spacing: 8,
-                            children: [
-                              Text(
-                                "Interview practice questions",
+                        padding: const EdgeInsets.all(16),
+                        child: Wrap(
+                          direction: Axis.vertical,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          children: [
+                            Text(
+                              "Analitycs",
+                              style: GoogleFonts.poppins(
+                                color: RolePlayColors.backgroundDark,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 332,
+                              child: Text(
+                                "Lorem ipsum dolor sit amet consectetur. "
+                                "Varius diam dolor at feugiat. ",
                                 style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
-                              Wrap(
-                                spacing: 8,
+                            ),
+                            Row(
+                              children: [
+                                MaterialButton(
+                                  color: analyticsCurrentIndex == 0
+                                      ? RolePlayColors.primary200
+                                      : null,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  onPressed: () {
+                                    if (analyticsCurrentIndex != 0) {
+                                      _tabController.animateTo(0);
+                                    }
+                                  },
+                                  child: const Text("Selected"),
+                                ),
+                                MaterialButton(
+                                  color: analyticsCurrentIndex == 1
+                                      ? RolePlayColors.primary200
+                                      : null,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  onPressed: () {
+                                    if (analyticsCurrentIndex != 1) {
+                                      _tabController.animateTo(1);
+                                    }
+                                  },
+                                  child: const Text("Voice"),
+                                ),
+                                MaterialButton(
+                                  color: analyticsCurrentIndex == 2
+                                      ? RolePlayColors.primary200
+                                      : null,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  onPressed: () {
+                                    if (analyticsCurrentIndex != 2) {
+                                      _tabController.animateTo(2);
+                                    }
+                                  },
+                                  child: const Text("Posture"),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              width: 300,
+                              height: 720,
+                              child: TabBarView(
+                                controller: _tabController,
                                 children: [
                                   Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: const Border.fromBorderSide(
+                                        BorderSide(
+                                          width: 2,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
                                     ),
-                                    margin: const EdgeInsets.only(top: 8),
-                                  ),
-                                  SizedBox(
-                                    width: 320,
-                                    child: Text(
-                                      "How do you handle feedback that you disagree with?",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
+                                    child: SingleChildScrollView(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Wrap(
+                                          direction: Axis.vertical,
+                                          spacing: 8,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                                color: RolePlayColors.error100,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 2,
+                                              ).copyWith(bottom: 4),
+                                              child: Text(
+                                                "Key points",
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("1. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "La candidata, Katja Rüegg, ha mostrado su entusiasmo por el puesto, que considera hecho a la medida de sus capacidades e intereses.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("2. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "Ha hecho especial hincapié en la oportunidad de utilizar diferentes idiomas y formar un equipo.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("3. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "La candidata estaba deseando saber más sobre el puesto durante la entrevista.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+
+                                            /// 2
+                                            Container(
+                                              margin: const EdgeInsets.only(
+                                                top: 16,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                                color:
+                                                    RolePlayColors.success200,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 2,
+                                              ).copyWith(bottom: 4),
+                                              child: Text(
+                                                "Positive Feedback",
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("1. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "La candidata se mostró muy entusiasta y segura en su entrevista. Mostró un claro interés por el puesto y parecía versada en él.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("2. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "Hizo hincapié en sus conocimientos de idiomas, lo que supone una gran ventaja en el mercado global actual.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+
+                                            /// 3
+                                            Container(
+                                              margin: const EdgeInsets.only(
+                                                top: 16,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                                color:
+                                                    RolePlayColors.warning200,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 2,
+                                              ).copyWith(bottom: 4),
+                                              child: Text(
+                                                "Comments to be Improved",
+                                                style: GoogleFonts.poppins(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("1. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "Aunque la mayor parte de la comunicación fue clara, la candidata cambió inesperadamente a otro idioma (francés). Esto podría causar confusión a algunos entrevistadores, a menos que la empresa espere aptitudes multilingües.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text("2. "),
+                                                SizedBox(
+                                                  width: 256,
+                                                  child: Text(
+                                                    "Conocimientos de inglés: Dado que la entrevista se realizó en alemán, no se puede evaluar el nivel de inglés del candidato. Las puntuaciones para el inglés entre 1 y 100 no pueden calcularse sin información adicional.",
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
+                                  Container(),
+                                  Container(),
                                 ],
                               ),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    margin: const EdgeInsets.only(top: 8),
-                                  ),
-                                  SizedBox(
-                                    width: 320,
-                                    child: Text(
-                                      "How do you prioritize your tasks when working on multiple projects simultaneously?",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    margin: const EdgeInsets.only(top: 8),
-                                  ),
-                                  SizedBox(
-                                    width: 320,
-                                    child: Text(
-                                      "How do you handle feedback that you disagree with?",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    margin: const EdgeInsets.only(top: 8),
-                                  ),
-                                  SizedBox(
-                                    width: 320,
-                                    child: Text(
-                                      "How do you prioritize your tasks when working on multiple projects simultaneously?",
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
