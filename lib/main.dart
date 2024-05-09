@@ -1,14 +1,12 @@
-import 'package:role_play/screens/VideoStreaming.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:role_play/screens/home_screen.dart';
 import 'package:role_play/theme/role_play_theme.dart';
 
-/*
-IO.Socket socket = IO.io("http://localhost:5000", <String, dynamic>{
-  'transports': ['websocket'],
-  'extraHeaders': {'foo': 'bar'} // optional
-});*/
+// IO.Socket socket = IO.io("http://localhost:5000", <String, dynamic>{
+//   'transports': ['websocket'],
+//   'extraHeaders': {'foo': 'bar'} // optional
+// });
 
 var PC_CONFIG = {
   'iceServers': [
@@ -26,17 +24,19 @@ var PC_CONFIG = {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(ProviderScope(
-    child: MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        primaryColor: Colors.orange,
-        scaffoldBackgroundColor: RolePlayColors.backgroundDark,
+  runApp(
+    ProviderScope(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          primaryColor: Colors.orange,
+          scaffoldBackgroundColor: RolePlayColors.backgroundDark,
+        ),
+        home: const MainApp(),
       ),
-      home: const MainApp(),
     ),
-  ));
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -49,7 +49,6 @@ class MainApp extends StatelessWidget {
         .init(websocketUrl: "ws://127.0.0.1:5000", selfCallerID: "000001");
     */
 
-
-    return HomeScreen();
+    return const HomeScreen();
   }
 }

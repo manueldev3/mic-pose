@@ -23,6 +23,7 @@ dependencies:
   socket_io_client: ^3.0.0-beta.2
   web_socket_channel: ^2.4.5
   supercontext: ^1.0.1
+  spider_chart: ^0.2.0
 
 dev_dependencies:
   flutter_test:

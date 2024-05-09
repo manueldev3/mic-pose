@@ -7,6 +7,7 @@ class RolePlayColors {
   static Color backgroundDark = const Color(0xFF0D0F11);
   static Color borders = const Color(0xFF5C5F65).withOpacity(0.5);
   static Color cardBg = const Color(0xFF333333);
+  static Color primary100 = const Color(0xFFFEE7D7);
   static Color primary200 = const Color(0xFFFDCEB0);
   static Color error100 = const Color(0xFFE4626F);
   static Color success200 = const Color(0xFF15B097);

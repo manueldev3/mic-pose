@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
@@ -10,9 +11,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:role_play/enums/record_status.dart';
 import 'package:role_play/theme/role_play_theme.dart';
+import 'package:role_play/widgets/posture_progress.dart';
+import 'package:role_play/widgets/filler_button.dart';
 import 'package:role_play/widgets/sidebar_widget.dart';
+import 'package:role_play/widgets/speed_speech_graphic.dart';
 import 'package:role_play/widgets/toast_widget.dart';
 import 'package:role_play/services/WebSocket.dart';
+import 'package:spider_chart/spider_chart.dart';
+import 'package:supercontext/supercontext.dart';
 
 /// Home Screen
 class HomeScreen extends ConsumerStatefulWidget {
@@ -32,6 +38,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Timer? _videoTimer;
   int analyticsCurrentIndex = 0;
 
+  /// In voice
+  bool _openSpeedOfSpeech = true;
+  bool _openNumberOfFillings = false;
+  bool _openCoherenceOfTheSpeech = false;
+
   /// late variables
   late TabController _tabController;
 
@@ -49,27 +60,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final WebSocket _socket = WebSocket("ws://127.0.0.1:5000/");
   bool _isConnected = false;
 
-  void stop_recording(){
+  void stop_recording() {
     _videoTimer?.cancel();
     _socket.send_message("stop_recording");
     setState(() {
-      _recordingStatus =
-          RecordingStatus.paused;
-      _recordStatus =
-          RecordStatus.preview;
+      _recordingStatus = RecordingStatus.paused;
+      _recordStatus = RecordStatus.preview;
       _videoTimer = null;
     });
   }
+
   void start_recording() {
     setState(() {
       _socket.send_message("start_recording");
-      _recordStatus =
-          RecordStatus.recording;
-      _recordingStatus =
-          RecordingStatus.playing;
+      _recordStatus = RecordStatus.recording;
+      _recordingStatus = RecordingStatus.playing;
       _videoTimer = Timer.periodic(
         const Duration(seconds: 1),
-            (timer) {
+        (timer) {
           setState(() {
             _videoTimeSeconds++;
           });
@@ -90,11 +98,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     setState(() {
       _isConnected = false;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
   }
 
   @override
@@ -194,31 +197,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 borderRadius: BorderRadius.circular(20),
                                 child: _isConnected
                                     ? Center(
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          Container(
-                                            color: Colors.white
-                                          ),
-                                          FittedBox(
-                                            fit: BoxFit.fitHeight,
-                                            child: StreamBuilder(
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            Container(color: Colors.white),
+                                            FittedBox(
+                                              fit: BoxFit.fitHeight,
+                                              child: StreamBuilder(
                                                 stream: _socket.stream,
                                                 builder: (context, snapshot) {
                                                   if (!snapshot.hasData) {
-                                                    return const Center(child: CircularProgressIndicator());
+                                                    return const Center(
+                                                        child:
+                                                            CircularProgressIndicator());
                                                   }
 
-                                                  if (snapshot.connectionState ==
+                                                  if (snapshot
+                                                          .connectionState ==
                                                       ConnectionState.done) {
                                                     return const Center(
-                                                      child:
-                                                          Text("Connection Closed !"),
+                                                      child: Text(
+                                                          "Connection Closed !"),
                                                     );
                                                   }
-                                                  //? Working for single frames
-                                                  var image = json.decode(
-                                                      utf8.decode(snapshot.data));
+
+                                                  /// Working for single frames
+                                                  var image = json.decode(utf8
+                                                      .decode(snapshot.data));
 
                                                   // return Text("Hola");
                                                   return Image.memory(
@@ -232,11 +237,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                   );
                                                 },
                                               ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : Center(
+                                        child: ElevatedButton(
+                                          child: Text(
+                                            "Connect",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
                                           ),
-                                        ],
+                                          onPressed: () {
+                                            connect(context);
+                                          },
+                                        ),
                                       ),
-                                    )
-                                    : Center(child: ElevatedButton(child: Text("Connect", style: TextStyle(color: Colors.black)), onPressed: (){connect(context);},)),
                               ),
                             ),
                             Positioned(
@@ -936,7 +953,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       _tabController.animateTo(0);
                                     }
                                   },
-                                  child: const Text("Selected"),
+                                  child: const Text("Feedback"),
                                 ),
                                 MaterialButton(
                                   color: analyticsCurrentIndex == 1
@@ -974,6 +991,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               child: TabBarView(
                                 controller: _tabController,
                                 children: [
+                                  /// FeedBack
                                   Container(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(20),
@@ -1153,8 +1171,428 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       ),
                                     ),
                                   ),
-                                  Container(),
-                                  Container(),
+
+                                  /// Voice
+                                  SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Lorem ipsum dolor sit amet consectetur. Varius diam dolor at feugiat.",
+                                          style: GoogleFonts.montserrat(),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        AnimatedSize(
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          child: SizedBox(
+                                            width: context.mediaSize.width,
+                                            child: Card(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                child: Column(
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                          "Speed of Speech",
+                                                          style: GoogleFonts
+                                                              .montserrat(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        Wrap(
+                                                          crossAxisAlignment:
+                                                              WrapCrossAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Visibility(
+                                                              visible:
+                                                                  !_openSpeedOfSpeech,
+                                                              child: Text(
+                                                                "58%",
+                                                                style: GoogleFonts
+                                                                    .montserrat(
+                                                                  color: Colors
+                                                                      .grey,
+                                                                  fontSize: 12,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            IconButton(
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  _openSpeedOfSpeech =
+                                                                      !_openSpeedOfSpeech;
+                                                                });
+                                                              },
+                                                              icon: Icon(
+                                                                _openSpeedOfSpeech
+                                                                    ? Icons
+                                                                        .keyboard_arrow_up
+                                                                    : Icons
+                                                                        .keyboard_arrow_down,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        )
+                                                      ],
+                                                    ),
+                                                    Visibility(
+                                                      visible:
+                                                          _openSpeedOfSpeech,
+                                                      child: const SizedBox(
+                                                        height: 16,
+                                                      ),
+                                                    ),
+                                                    Visibility(
+                                                      visible:
+                                                          _openSpeedOfSpeech,
+                                                      child:
+                                                          const SpeechGraphic(
+                                                        title: "Conversational",
+                                                        startTitle: "Slow",
+                                                        endTitle: "Fast",
+                                                        progress: 58,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        /// Number of Fillings
+                                        AnimatedSize(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          child: Card(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16),
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        "Number of fillings",
+                                                        style: GoogleFonts
+                                                            .montserrat(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Wrap(
+                                                        crossAxisAlignment:
+                                                            WrapCrossAlignment
+                                                                .center,
+                                                        children: [
+                                                          Visibility(
+                                                            visible:
+                                                                !_openNumberOfFillings,
+                                                            child: Text(
+                                                              "3 Fillers",
+                                                              style: GoogleFonts
+                                                                  .montserrat(
+                                                                color:
+                                                                    Colors.grey,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          IconButton(
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _openNumberOfFillings =
+                                                                    !_openNumberOfFillings;
+                                                              });
+                                                            },
+                                                            icon: Icon(
+                                                              _openNumberOfFillings
+                                                                  ? Icons
+                                                                      .keyboard_arrow_up
+                                                                  : Icons
+                                                                      .keyboard_arrow_down,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openNumberOfFillings,
+                                                    child: const SizedBox(
+                                                      height: 16,
+                                                    ),
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openNumberOfFillings,
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        color: RolePlayColors
+                                                            .primary100,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          8,
+                                                        ),
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8),
+                                                      child: Center(
+                                                        child: Text(
+                                                          "Nice job! It’s natural to have fewer than 4% fillers.",
+                                                          style: GoogleFonts
+                                                              .montserrat(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openNumberOfFillings,
+                                                    child: const SizedBox(
+                                                      height: 16,
+                                                    ),
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openNumberOfFillings,
+                                                    child: Wrap(
+                                                      spacing: 4,
+                                                      children: [
+                                                        FillerButton(
+                                                          onPressed: () {},
+                                                          label: "Uh",
+                                                        ),
+                                                        FillerButton(
+                                                          onPressed: () {},
+                                                          number: 2,
+                                                          label: "Ah",
+                                                        ),
+                                                        FillerButton(
+                                                          onPressed: () {},
+                                                          number: 3,
+                                                          label: "Mm",
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+
+                                        /// Coherence of the speech
+                                        AnimatedSize(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          child: Card(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16),
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        "Coherence of the speech",
+                                                        style: GoogleFonts
+                                                            .montserrat(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Wrap(
+                                                        crossAxisAlignment:
+                                                            WrapCrossAlignment
+                                                                .center,
+                                                        children: [
+                                                          Visibility(
+                                                            visible:
+                                                                !_openCoherenceOfTheSpeech,
+                                                            child: Text(
+                                                              "30%",
+                                                              style: GoogleFonts
+                                                                  .montserrat(
+                                                                color:
+                                                                    Colors.grey,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          IconButton(
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                _openCoherenceOfTheSpeech =
+                                                                    !_openCoherenceOfTheSpeech;
+                                                              });
+                                                            },
+                                                            icon: Icon(
+                                                              _openCoherenceOfTheSpeech
+                                                                  ? Icons
+                                                                      .keyboard_arrow_up
+                                                                  : Icons
+                                                                      .keyboard_arrow_down,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openCoherenceOfTheSpeech,
+                                                    child: const SizedBox(
+                                                      height: 16,
+                                                    ),
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openCoherenceOfTheSpeech,
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        color: RolePlayColors
+                                                            .primary100,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          8,
+                                                        ),
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8),
+                                                      child: Center(
+                                                        child: Text(
+                                                          "Nice job! It’s natural to have fewer than 4% fillers.",
+                                                          style: GoogleFonts
+                                                              .montserrat(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openCoherenceOfTheSpeech,
+                                                    child: const SizedBox(
+                                                      height: 16,
+                                                    ),
+                                                  ),
+                                                  Visibility(
+                                                    visible:
+                                                        _openCoherenceOfTheSpeech,
+                                                    child: Center(
+                                                      child: SizedBox(
+                                                        width: 200,
+                                                        height: 200,
+                                                        child: SpiderChart(
+                                                          data: const [
+                                                            7,
+                                                            5,
+                                                            10,
+                                                            7,
+                                                            4,
+                                                          ],
+                                                          maxValue:
+                                                              10, // the maximum value that you want to represent (essentially sets the data scale of the chart)
+                                                          colors: const [
+                                                            Colors.red,
+                                                            Colors.green,
+                                                            Colors.blue,
+                                                            Colors.yellow,
+                                                            Colors.indigo,
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  /// Posture
+                                  SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Lorem ipsum dolor sit amet consectetur. Varius diam dolor at feugiat.",
+                                          style: GoogleFonts.montserrat(),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        AnimatedSize(
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          child: SizedBox(
+                                            width: context.mediaSize.width,
+                                            child: Card(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  16,
+                                                ),
+                                                child: Column(
+                                                  children:
+                                                      ListTile.divideTiles(
+                                                    color: Colors.grey,
+                                                    tiles: List.generate(
+                                                      10,
+                                                      (index) {
+                                                        return PostureProgress(
+                                                          progress:
+                                                              Random().nextInt(
+                                                                    80,
+                                                                  ) +
+                                                                  20,
+                                                          description:
+                                                              "Posture description",
+                                                        );
+                                                      },
+                                                    ),
+                                                  ).toList(),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
