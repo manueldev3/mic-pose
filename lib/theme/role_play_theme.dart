@@ -12,4 +12,5 @@ class RolePlayColors {
   static Color error100 = const Color(0xFFE4626F);
   static Color success200 = const Color(0xFF15B097);
   static Color warning200 = const Color(0xFFEDA145);
+  static Color secondary500 = const Color(0xFFED5F41);
 }
