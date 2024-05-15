@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:desktop_window/desktop_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:role_play/screens/home_screen.dart';
@@ -24,6 +27,11 @@ var PC_CONFIG = {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isWindows) {
+    await DesktopWindow.setFullScreen(true);
+  }
+
   runApp(
     ProviderScope(
       child: MaterialApp(
@@ -32,6 +40,9 @@ Future<void> main() async {
           useMaterial3: true,
           primaryColor: Colors.orange,
           scaffoldBackgroundColor: RolePlayColors.backgroundDark,
+          scrollbarTheme: const ScrollbarThemeData(
+            thumbColor: MaterialStatePropertyAll(Colors.white),
+          ),
         ),
         home: const MainApp(),
       ),

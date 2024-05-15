@@ -4,11 +4,13 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:chart_sparkline/chart_sparkline.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:role_play/enums/record_status.dart';
 import 'package:role_play/theme/role_play_theme.dart';
 import 'package:role_play/widgets/posture_progress.dart';
@@ -20,6 +22,8 @@ import 'package:role_play/services/WebSocket.dart';
 import 'package:role_play/widgets/video.dart';
 import 'package:spider_chart/spider_chart.dart';
 import 'package:supercontext/supercontext.dart';
+import 'package:unique_simple_bar_chart/data_models.dart';
+import 'package:unique_simple_bar_chart/simple_bar_chart.dart';
 
 /// Home Screen
 class HomeScreen extends ConsumerStatefulWidget {
@@ -974,11 +978,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         child: Column(
                           children: [
                             Container(
-                              width: 364,
+                              width: context.mediaSize.width > 1366 ? 364 : 840,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
                                 color: Colors.white,
                               ),
+                              margin: context.mediaSize.width > 1366
+                                  ? EdgeInsets.zero
+                                  : const EdgeInsets.only(left: 8),
                               padding: const EdgeInsets.all(16),
                               child: Wrap(
                                 direction: Axis.vertical,
@@ -1008,42 +1015,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                     direction: Axis.vertical,
                                     children: [
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.warning(
-                                            "Watch your posture."),
+                                          "Watch your posture.",
+                                        ),
                                       ),
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.success(
                                           "Hands not in the pockets",
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.success(
                                           "Hands not in the face",
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.danger(
                                           "Try to level your shoulders",
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.success(
                                           "Hips are aligned",
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.success(
                                           "Your head is straight",
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 332,
+                                        width: context.mediaSize.width > 1366
+                                            ? 332
+                                            : 810,
                                         child: Toast.warning(
                                           "Try to straighten your spine",
                                         ),
@@ -1057,8 +1079,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               height: 16,
                             ),
                             Container(
-                              constraints: const BoxConstraints(
-                                maxWidth: 364,
+                              constraints: BoxConstraints(
+                                minWidth:
+                                    context.mediaSize.width > 1366 ? 334 : 840,
                               ),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
@@ -1090,7 +1113,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         margin: const EdgeInsets.only(top: 8),
                                       ),
                                       SizedBox(
-                                        width: 320,
+                                        width: context.mediaSize.width > 1366
+                                            ? 320
+                                            : 740,
                                         child: Text(
                                           "How do you handle feedback that you disagree with?",
                                           style: GoogleFonts.poppins(
@@ -1113,7 +1138,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         margin: const EdgeInsets.only(top: 8),
                                       ),
                                       SizedBox(
-                                        width: 320,
+                                        width: context.mediaSize.width > 1366
+                                            ? 320
+                                            : 740,
                                         child: Text(
                                           "How do you prioritize your tasks when working on multiple projects simultaneously?",
                                           style: GoogleFonts.poppins(
@@ -1136,7 +1163,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         margin: const EdgeInsets.only(top: 8),
                                       ),
                                       SizedBox(
-                                        width: 320,
+                                        width: context.mediaSize.width > 1366
+                                            ? 320
+                                            : 740,
                                         child: Text(
                                           "How do you handle feedback that you disagree with?",
                                           style: GoogleFonts.poppins(
@@ -1159,7 +1188,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         margin: const EdgeInsets.only(top: 8),
                                       ),
                                       SizedBox(
-                                        width: 320,
+                                        width: context.mediaSize.width > 1366
+                                            ? 320
+                                            : 740,
                                         child: Text(
                                           "How do you prioritize your tasks when working on multiple projects simultaneously?",
                                           style: GoogleFonts.poppins(
@@ -1178,7 +1209,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       Visibility(
                         visible: _recordStatus.isView,
                         child: Container(
-                          width: 364,
+                          width: context.mediaSize.width > 1366 ? 364 : 840,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
                             color: Colors.white,
@@ -1200,8 +1231,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               SizedBox(
                                 width: 332,
                                 child: Text(
-                                  "Lorem ipsum dolor sit amet consectetur. "
-                                  "Varius diam dolor at feugiat. ",
+                                  "Lorem ipsum dolor sit amet consectetur."
+                                  "Varius diam dolor at feugiat.",
                                   style: GoogleFonts.poppins(
                                     color: Colors.grey,
                                   ),
@@ -1255,7 +1286,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 ],
                               ),
                               SizedBox(
-                                width: 300,
+                                width:
+                                    context.mediaSize.width > 1366 ? 300 : 808,
                                 height: 720,
                                 child: TabBarView(
                                   controller: _tabController,
@@ -1282,7 +1314,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                 decoration: BoxDecoration(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                          100),
+                                                    100,
+                                                  ),
                                                   color:
                                                       RolePlayColors.error100,
                                                 ),
@@ -1298,40 +1331,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                   ),
                                                 ),
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("1. "),
+                                                  const Text("1. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "La candidata, Katja Rüegg, ha mostrado su entusiasmo por el puesto, que considera hecho a la medida de sus capacidades e intereses.",
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("2. "),
+                                                  const Text("2. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "Ha hecho especial hincapié en la oportunidad de utilizar diferentes idiomas y formar un equipo.",
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("3. "),
+                                                  const Text("3. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "La candidata estaba deseando saber más sobre el puesto durante la entrevista.",
                                                     ),
                                                   ),
@@ -1362,27 +1407,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                   ),
                                                 ),
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("1. "),
+                                                  const Text("1. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "La candidata se mostró muy entusiasta y segura en su entrevista. Mostró un claro interés por el puesto y parecía versada en él.",
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("2. "),
+                                                  const Text("2. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "Hizo hincapié en sus conocimientos de idiomas, lo que supone una gran ventaja en el mercado global actual.",
                                                     ),
                                                   ),
@@ -1397,7 +1450,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                 decoration: BoxDecoration(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                          100),
+                                                    100,
+                                                  ),
                                                   color:
                                                       RolePlayColors.warning200,
                                                 ),
@@ -1413,27 +1467,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                   ),
                                                 ),
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("1. "),
+                                                  const Text("1. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "Aunque la mayor parte de la comunicación fue clara, la candidata cambió inesperadamente a otro idioma (francés). Esto podría causar confusión a algunos entrevistadores, a menos que la empresa espere aptitudes multilingües.",
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                              const Row(
+                                              Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text("2. "),
+                                                  const Text("2. "),
                                                   SizedBox(
-                                                    width: 256,
-                                                    child: Text(
+                                                    width: context.mediaSize
+                                                                .width >
+                                                            1366
+                                                        ? 256
+                                                        : 740,
+                                                    child: const Text(
                                                       "Conocimientos de inglés: Dado que la entrevista se realizó en alemán, no se puede evaluar el nivel de inglés del candidato. Las puntuaciones para el inglés entre 1 y 100 no pueden calcularse sin información adicional.",
                                                     ),
                                                   ),
@@ -1457,6 +1519,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                           ),
                                           const SizedBox(height: 16),
                                           AnimatedSize(
+                                            alignment: Alignment.topCenter,
                                             duration: const Duration(
                                               milliseconds: 300,
                                             ),
@@ -1548,6 +1611,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                                           /// Number of Fillings
                                           AnimatedSize(
+                                            alignment: Alignment.topCenter,
                                             duration: const Duration(
                                                 milliseconds: 300),
                                             child: Card(
@@ -1684,6 +1748,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                                           /// Coherence of the speech
                                           AnimatedSize(
+                                            alignment: Alignment.topCenter,
                                             duration: const Duration(
                                                 milliseconds: 300),
                                             child: Card(
@@ -1793,27 +1858,117 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                       visible:
                                                           _openCoherenceOfTheSpeech,
                                                       child: Center(
-                                                        child: SizedBox(
-                                                          width: 200,
-                                                          height: 200,
-                                                          child: SpiderChart(
-                                                            data: const [
-                                                              7,
-                                                              5,
-                                                              10,
-                                                              7,
-                                                              4,
-                                                            ],
-                                                            maxValue:
-                                                                10, // the maximum value that you want to represent (essentially sets the data scale of the chart)
-                                                            colors: const [
-                                                              Colors.red,
-                                                              Colors.green,
-                                                              Colors.blue,
-                                                              Colors.yellow,
-                                                              Colors.indigo,
-                                                            ],
-                                                          ),
+                                                        child: Column(
+                                                          children: [
+                                                            /// Spider chart
+                                                            SizedBox(
+                                                              width: 200,
+                                                              height: 200,
+                                                              child:
+                                                                  SpiderChart(
+                                                                data: const [
+                                                                  7,
+                                                                  5,
+                                                                  10,
+                                                                  7,
+                                                                  4,
+                                                                ],
+                                                                maxValue:
+                                                                    10, // the maximum value that you want to represent (essentially sets the data scale of the chart)
+                                                                colors: const [
+                                                                  Colors.red,
+                                                                  Colors.green,
+                                                                  Colors.blue,
+                                                                  Colors.yellow,
+                                                                  Colors.indigo,
+                                                                ],
+                                                              ),
+                                                            ),
+
+                                                            /// Pie Chart
+                                                            const SizedBox(
+                                                              width: 300,
+                                                              height: 300,
+                                                              child: PieChart(
+                                                                dataMap: <String,
+                                                                    double>{
+                                                                  "Data 1": 5,
+                                                                  "Data 2": 3,
+                                                                  "Data 3": 2,
+                                                                  "Data 4": 2,
+                                                                },
+                                                              ),
+                                                            ),
+
+                                                            /// Line Chart
+                                                            SizedBox(
+                                                              width: 300,
+                                                              height: 300,
+                                                              child: Sparkline(
+                                                                data: const [
+                                                                  0.0,
+                                                                  1.0,
+                                                                  1.5,
+                                                                  2.0,
+                                                                  0.0,
+                                                                  0.0,
+                                                                  -0.5,
+                                                                  -1.0,
+                                                                  -0.5,
+                                                                  0.0,
+                                                                  0.0,
+                                                                ],
+                                                                lineWidth: 10.0,
+                                                                lineGradient:
+                                                                    LinearGradient(
+                                                                  begin: Alignment
+                                                                      .topCenter,
+                                                                  end: Alignment
+                                                                      .bottomCenter,
+                                                                  colors: [
+                                                                    Colors
+                                                                        .purple
+                                                                        .shade400,
+                                                                    Colors
+                                                                        .purple
+                                                                        .shade200,
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+
+                                                            /// Bar chart
+                                                            SimpleBarChart(
+                                                              listOfHorizontalBarData: [
+                                                                HorizontalDetailsModel(
+                                                                  name: '1',
+                                                                  color: const Color(
+                                                                      0xFFEB7735),
+                                                                  size: 73,
+                                                                ),
+                                                                HorizontalDetailsModel(
+                                                                  name: '2',
+                                                                  color: const Color(
+                                                                      0xFFEB7735),
+                                                                  size: 92,
+                                                                ),
+                                                                HorizontalDetailsModel(
+                                                                  name: '3',
+                                                                  color: const Color(
+                                                                      0xFFFBBC05),
+                                                                  size: 120,
+                                                                ),
+                                                                HorizontalDetailsModel(
+                                                                  name: '4',
+                                                                  color: const Color(
+                                                                      0xFFFBBC05),
+                                                                  size: 86,
+                                                                ),
+                                                              ],
+                                                              verticalInterval:
+                                                                  100,
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
                                                     ),
